@@ -1,0 +1,17 @@
+{
+  "name": "@guru-upadesh/eslint-config",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared ESLint configuration",
+  "main": "index.js",
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1"
+  },
+  "peerDependencies": {
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

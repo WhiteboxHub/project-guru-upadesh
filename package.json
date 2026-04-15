@@ -1,0 +1,46 @@
+{
+  "name": "guru-upadesh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Interview Preparation Platform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/guru-upadesh.git"
+  },
+  "license": "MIT",
+  "author": "Sampath Velupula",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:cov": "turbo run test:cov",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "typecheck": "turbo run typecheck",
+    "docker:dev": "docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker-compose -f infrastructure/docker/docker-compose.dev.yml down",
+    "migrate:dev": "cd apps/api && pnpm prisma migrate dev",
+    "migrate:deploy": "cd apps/api && pnpm prisma migrate deploy",
+    "seed": "cd apps/api && pnpm prisma db seed",
+    "studio": "cd apps/api && pnpm prisma studio"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "prettier": "^3.2.4",
+    "turbo": "^1.12.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}

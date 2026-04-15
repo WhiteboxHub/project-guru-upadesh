@@ -1,0 +1,209 @@
+// Prisma Schema for Guru Upadesh Interview Preparation Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Authentication and Core Data
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  profile       UserProfile?
+  interviews    Interview[]
+  analytics     UserAnalytics[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// User Profile Information
+model UserProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  bio          String?
+  avatarUrl    String?  @map("avatar_url")
+  phone        String?
+  location     String?
+  preferences  Json?    @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_profiles")
+}
+
+// Refresh Token Management
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// Interview Sessions
+model Interview {
+  id         String          @id @default(uuid())
+  userId     String          @map("user_id")
+  type       InterviewType
+  difficulty DifficultyLevel
+  status     InterviewStatus @default(IN_PROGRESS)
+  score      Float?
+  duration   Int?            // Duration in seconds
+  metadata   Json?           @default("{}")
+  startedAt  DateTime        @default(now()) @map("started_at")
+  completedAt DateTime?      @map("completed_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses InterviewResponse[]
+  questions InterviewQuestion[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("interviews")
+}
+
+// Question Bank
+model Question {
+  id         String          @id @default(uuid())
+  text       String
+  category   QuestionCategory
+  difficulty DifficultyLevel
+  tags       String[]
+  company    String?
+  hints      Json?           @default("[]")
+  metadata   Json?           @default("{}")
+  isActive   Boolean         @default(true) @map("is_active")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  responses  InterviewResponse[]
+  interviews InterviewQuestion[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([company])
+  @@index([isActive])
+  @@map("questions")
+}
+
+// Join table for Interview and Question (many-to-many)
+model InterviewQuestion {
+  id          String   @id @default(uuid())
+  interviewId String   @map("interview_id")
+  questionId  String   @map("question_id")
+  order       Int
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  question  Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, questionId])
+  @@index([interviewId])
+  @@index([questionId])
+  @@map("interview_questions")
+}
+
+// User Responses to Interview Questions
+model InterviewResponse {
+  id          String   @id @default(uuid())
+  interviewId String   @map("interview_id")
+  questionId  String   @map("question_id")
+  answer      String
+  score       Float?
+  feedback    Json?    @default("{}")
+  duration    Int?     // Time taken to answer in seconds
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  question  Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, questionId])
+  @@index([interviewId])
+  @@index([questionId])
+  @@map("interview_responses")
+}
+
+// User Analytics and Performance Tracking
+model UserAnalytics {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  metrics   Json     @default("{}")
+  period    String   // e.g., "2024-01", "2024-W01"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period])
+  @@index([userId])
+  @@index([period])
+  @@map("user_analytics")
+}
+
+// Enums
+enum InterviewType {
+  TECHNICAL
+  BEHAVIORAL
+  CASE_STUDY
+  SYSTEM_DESIGN
+  CODING
+  CONSULTING
+  FINANCE
+  MOCK_LIVE
+}
+
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  PAUSED
+}
+
+enum QuestionCategory {
+  BEHAVIORAL
+  TECHNICAL
+  CODING
+  SYSTEM_DESIGN
+  CASE_STUDY
+  SITUATIONAL
+  LEADERSHIP
+  PROBLEM_SOLVING
+  COMMUNICATION
+}
